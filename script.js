@@ -3,7 +3,7 @@ const startTrackingBtn = document.getElementById("startTracking");
 const tableContainer = document.getElementById("tableContainer");
 let allWeek;
 let shareXmlData;
-console.log("XML Data 1", shareXmlData);
+let downloadLink = null;
 
 // Function to format date as YYYY-MM-DD
 function formatDate(date) {
@@ -72,6 +72,12 @@ async function fetchWeatherData(start_date, end_date) {
     }
     const data = await response.json();
     displayWeatherTable(data);
+
+    if (downloadLink) {
+      downloadLink.remove();
+      downloadLink = null;
+    }
+    shareXmlData = null;
   } catch (error) {
     displayErrorMessage();
   }
@@ -198,39 +204,12 @@ function generateXML(data) {
 
   return xmlString;
 }
-/*
-// Event listener for Generate XML button
-generateXmlBtn.addEventListener("click", () => {
-  const tableRows = document.querySelectorAll("#tableContainer tbody tr");
-  const xmlData = Array.from(tableRows).map((row) => {
-    const cells = row.querySelectorAll("td");
-    return Array.from(cells).map((cell) => cell.textContent);
-  });
-
-  const xml = generateXML(xmlData);
-  
-  // Create a Blob with XML content
-  const blob = new Blob([xml], { type: "text/xml" });
-
-  // Create a URL for the Blob
-  const url = URL.createObjectURL(blob);
-
-  // Create a link to download the Blob
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "temperature_data.xml";
-
-  // Click the link to initiate download
-  a.click();
-
-  // Clean up
-  URL.revokeObjectURL(url);
-  fs.writeFileSync("temperature_data.xml", xml);
-  alert("XML file saved in the root directory.");
-});
-*/
 
 generateXmlBtn.addEventListener("click", (event) => {
+  if (downloadLink) {
+    downloadLink.remove();
+    downloadLink = null;
+  }
   event.preventDefault(); // Prevent the default behavior
   const tableRows = document.querySelectorAll("#tableContainer tbody tr");
   const xmlData = Array.from(tableRows).map((row) => {
@@ -239,21 +218,20 @@ generateXmlBtn.addEventListener("click", (event) => {
   });
 
   const xml = generateXML(xmlData);
-  if (xml) {
-    shareXmlData = xml;
-  }
-
-  console.log("XML Data", xml);
-
+  shareXmlData = xml;
   // Create a Blob with the XML content
   const blob = new Blob([xml], { type: "text/xml" });
 
-  // Create a download link
-  const downloadLink = document.createElement("a");
-  downloadLink.href = URL.createObjectURL(blob);
-  downloadLink.download = "temperature_data.xml";
-  downloadLink.textContent = "Download XML";
-
-  // Append the download link to the page
-  document.body.appendChild(downloadLink);
+  // If the download link doesn't exist, create and append it
+  if (!downloadLink) {
+    downloadLink = document.createElement("a");
+    downloadLink.id = "downloadXmlData";
+    downloadLink.href = URL.createObjectURL(blob);
+    downloadLink.download = "temperature_data.xml";
+    downloadLink.textContent = "Download XML";
+    document.body.appendChild(downloadLink);
+  } else {
+    // Update the download link properties
+    downloadLink.href = URL.createObjectURL(blob);
+  }
 });
