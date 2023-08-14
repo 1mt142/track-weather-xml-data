@@ -4,6 +4,7 @@ const tableContainer = document.getElementById("tableContainer");
 let allWeek;
 let shareXmlData;
 let downloadLink = null;
+let apiRespone = null;
 
 // Function to format date as YYYY-MM-DD
 function formatDate(date) {
@@ -77,6 +78,7 @@ async function fetchWeatherData(start_date, end_date) {
       throw new Error("API Error");
     }
     const data = await response.json();
+    apiRespone = data;
     displayWeatherTable(data);
 
     if (downloadLink) {
@@ -229,7 +231,7 @@ generateXmlBtn.addEventListener("click", (event) => {
   const blob = new Blob([xml], { type: "text/xml" });
 
   // If the download link doesn't exist, create and append it
-  if (!downloadLink) {
+  if (!downloadLink && apiRespone) {
     downloadLink = document.createElement("a");
     downloadLink.id = "downloadXmlData";
     downloadLink.href = URL.createObjectURL(blob);
